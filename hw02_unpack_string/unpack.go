@@ -5,42 +5,35 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
-
-	"github.com/rivo/uniseg" //nolint:depguard
 )
 
 var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(s string) (string, error) {
 	result := strings.Builder{}
-	var prevSymbol []rune
-	var currentSymbol []rune
 
-	gr := uniseg.NewGraphemes(s)
-	for gr.Next() {
-		currentSymbol = gr.Runes()
+	var lastSymbol rune
 
-		if len(currentSymbol) == 1 && unicode.IsNumber(currentSymbol[0]) &&
-			(len(prevSymbol) == 0 || unicode.IsNumber(prevSymbol[0])) {
+	for idx, symbol := range s {
+
+		if unicode.IsNumber(symbol) && (idx == 0 || unicode.IsNumber(lastSymbol)) {
 			return "", ErrInvalidString
 		}
 
-		if (!unicode.IsNumber(currentSymbol[0])) && len(prevSymbol) > 0 && !unicode.IsNumber(prevSymbol[0]) {
-			result.WriteRune(prevSymbol[0])
+		if (!unicode.IsNumber(symbol)) && !unicode.IsNumber(lastSymbol) && idx > 0 {
+			result.WriteRune(lastSymbol)
 		}
 
-		if unicode.IsNumber(currentSymbol[0]) && len(prevSymbol) > 0 && prevSymbol[0] != 0 {
-			for t, _ := strconv.Atoi(string(currentSymbol)); t > 0; t-- {
-				result.WriteRune(prevSymbol[0])
-			}
-		}
-		_, b := gr.Positions()
-
-		if !unicode.IsNumber(currentSymbol[0]) && len(s) == b {
-			result.WriteRune(currentSymbol[0])
+		if unicode.IsNumber(symbol) && lastSymbol != 0 {
+			countRepeat, _ := strconv.Atoi(string(symbol))
+			result.WriteString(strings.Repeat(string(lastSymbol), countRepeat))
 		}
 
-		prevSymbol = currentSymbol
+		lastSymbol = symbol
+	}
+
+	if !unicode.IsNumber(lastSymbol) && len(s) > 0 {
+		result.WriteRune(lastSymbol)
 	}
 
 	return result.String(), nil
