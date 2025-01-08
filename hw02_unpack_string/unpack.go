@@ -11,11 +11,9 @@ var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(s string) (string, error) {
 	result := strings.Builder{}
-
 	var lastSymbol rune
 
 	for idx, symbol := range s {
-
 		if unicode.IsNumber(symbol) && (idx == 0 || unicode.IsNumber(lastSymbol)) {
 			return "", ErrInvalidString
 		}
