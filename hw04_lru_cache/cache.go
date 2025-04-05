@@ -29,6 +29,7 @@ func NewCache(capacity int) Cache {
 		items:    make(map[Key]*ListItem, capacity),
 	}
 }
+
 func (l *lruCache) Set(key Key, value interface{}) bool {
 	l.mutex.Lock()
 	defer l.mutex.Unlock()
